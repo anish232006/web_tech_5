@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chili Express — Online Food Delivery | DOM & Events Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --charcoal:#241F1C;
+    --charcoal-soft:#332B26;
+    --charcoal-line:#453B34;
+    --paper:#F7ECD9;
+    --chili:#C0392B;
+    --chili-dark:#8F2A1E;
+    --turmeric:#E8A93B;
+    --basil:#5B7F4F;
+    --text-light:#F3E9D8;
+    --text-dim:#C8BBA9;
+    --text-dark:#2B2420;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--charcoal);color:var(--text-light);font-family:'Inter',sans-serif;}
+  h1,h2,h3{font-family:'Bebas Neue',sans-serif;letter-spacing:.03em;margin:0;}
+
+  /* ---------- header ---------- */
+  header.topbar{padding:2.5rem 1.5rem 1.5rem;text-align:center;border-bottom:1px solid var(--charcoal-line);}
+  .eyebrow{font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;color:var(--turmeric);font-weight:600;}
+  .brand{font-size:3.4rem;color:var(--text-light);margin-top:.35rem;}
+  .brand span{color:var(--chili);}
+  .tagline{color:var(--text-dim);font-size:.95rem;margin-top:.25rem;}
+
+  /* ---------- controls ---------- */
+  .controls{max-width:1180px;margin:1.75rem auto 0;padding:0 1.5rem;display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;}
+  .search-wrap{flex:1;min-width:200px;position:relative;}
+  .search-wrap input{width:100%;padding:.7rem 1rem;border-radius:999px;border:1px solid var(--charcoal-line);background:var(--charcoal-soft);color:var(--text-light);font-size:.9rem;}
+  .search-wrap input::placeholder{color:var(--text-dim);}
+  select, .veg-toggle{padding:.65rem .9rem;border-radius:999px;border:1px solid var(--charcoal-line);background:var(--charcoal-soft);color:var(--text-light);font-size:.85rem;}
+  .veg-toggle{display:flex;align-items:center;gap:.45rem;cursor:pointer;user-select:none;}
+  .veg-toggle input{accent-color:var(--basil);}
+
+  .tabs{max-width:1180px;margin:1rem auto 0;padding:0 1.5rem;display:flex;gap:.5rem;flex-wrap:wrap;}
+  .tab{background:transparent;border:1px solid var(--charcoal-line);color:var(--text-dim);padding:.5rem 1rem;border-radius:999px;font-size:.82rem;cursor:pointer;transition:background .15s, color .15s, border-color .15s;}
+  .tab:hover{border-color:var(--turmeric);color:var(--text-light);}
+  .tab.active{background:var(--turmeric);border-color:var(--turmeric);color:var(--text-dark);font-weight:600;}
+
+  .result-count{max-width:1180px;margin:.6rem auto 0;padding:0 1.5rem;font-size:.78rem;color:var(--text-dim);}
+
+  /* ---------- chef spin promo ---------- */
+  .spin-card{max-width:1180px;margin:1.25rem auto 0;padding:0 1.5rem;}
+  .spin-inner{background:linear-gradient(120deg,var(--chili-dark),var(--chili));border-radius:var(--radius);padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+  .spin-inner button{background:var(--turmeric);border:none;color:var(--text-dark);font-weight:700;padding:.6rem 1.1rem;border-radius:999px;cursor:pointer;font-size:.85rem;flex-shrink:0;}
+  .spin-inner button:hover{filter:brightness(1.06);}
+  #specialResult{font-size:.85rem;color:var(--text-light);}
+  #specialResult:empty::before{content:"Tap the wheel for today's surprise discount on a random dish 🎲";color:#f4d9cf;}
+
+  /* ---------- layout ---------- */
+  .layout{max-width:1180px;margin:1.5rem auto 3rem;padding:0 1.5rem;display:grid;grid-template-columns:1fr 340px;gap:1.75rem;align-items:start;}
+  @media (max-width:880px){.layout{grid-template-columns:1fr;}}
+
+  .cat-heading{color:var(--turmeric);font-size:1.3rem;margin:1.4rem 0 .6rem;letter-spacing:.06em;}
+  .cat-heading:first-child{margin-top:0;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;}
+
+  .menu-card{background:var(--charcoal-soft);border:1px solid var(--charcoal-line);border-radius:var(--radius);padding:1rem;display:flex;flex-direction:column;gap:.5rem;transition:transform .15s, border-color .15s;position:relative;}
+  .menu-card.is-hovered{transform:translateY(-3px);border-color:var(--turmeric);}
+  .menu-card .icon{font-size:2rem;}
+  .menu-card .name-row{display:flex;align-items:center;gap:.4rem;}
+  .diet-mark{width:13px;height:13px;border:1.5px solid;display:inline-block;position:relative;flex-shrink:0;}
+  .diet-mark.veg{border-color:#3F9142;}
+  .diet-mark.veg::before{content:'';position:absolute;inset:2.5px;background:#3F9142;border-radius:50%;}
+  .diet-mark.nonveg{border-color:#A6402F;}
+  .diet-mark.nonveg::before{content:'';position:absolute;inset:2.5px;background:#A6402F;border-radius:50%;}
+  .menu-card .name{font-weight:600;font-size:.95rem;}
+  .menu-card .price{color:var(--turmeric);font-family:'JetBrains Mono',monospace;font-weight:600;}
+  .hover-hint{position:absolute;top:.6rem;right:.7rem;font-size:.65rem;color:var(--text-dim);opacity:0;transition:opacity .15s;}
+  .menu-card.is-hovered .hover-hint{opacity:1;}
+  .add-btn{margin-top:.25rem;background:var(--chili);color:var(--text-light);border:none;border-radius:999px;padding:.5rem;font-size:.82rem;font-weight:600;cursor:pointer;transition:background .15s;}
+  .add-btn:hover{background:var(--chili-dark);}
+  .add-btn.pulse{animation:pulse .35s ease;}
+  @keyframes pulse{0%{transform:scale(1);}50%{transform:scale(.94);background:var(--basil);}100%{transform:scale(1);}}
+  .empty-state{color:var(--text-dim);padding:2rem 0;text-align:center;font-size:.9rem;}
+
+  /* ---------- ticket / receipt ---------- */
+  .ticket{background:var(--paper);color:var(--text-dark);border-radius:var(--radius);position:sticky;top:1.25rem;overflow:hidden;}
+  .ticket::before{content:'';display:block;height:12px;background-image:radial-gradient(circle,var(--charcoal) 5px,transparent 5.5px);background-size:20px 20px;background-position:center -6px;background-repeat:repeat-x;}
+  .ticket-inner{padding:1.1rem 1.25rem 1.4rem;font-family:'JetBrains Mono',monospace;}
+  .ticket h2{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.08em;text-align:center;color:var(--chili);}
+  .ticket .sub{text-align:center;font-size:.68rem;color:#6b5f52;letter-spacing:.12em;margin-bottom:.85rem;}
+  .ticket-body{min-height:60px;border-top:1px dashed #b9ab94;border-bottom:1px dashed #b9ab94;padding:.6rem 0;}
+  .ticket-line{display:flex;flex-direction:column;gap:.15rem;padding:.4rem 0;}
+  .ticket-line .row{display:flex;align-items:baseline;gap:.4rem;font-size:.82rem;}
+  .ticket-line .leader{flex:1;border-bottom:1px dotted #a89a84;margin-bottom:3px;}
+  .qty-controls{display:flex;align-items:center;gap:.4rem;font-size:.75rem;}
+  .qty-controls button{width:20px;height:20px;border:1px solid #a89a84;background:transparent;border-radius:4px;cursor:pointer;font-family:inherit;line-height:1;}
+  .qty-controls button:hover{background:#e8dcc4;}
+  .remove-btn{background:none;border:none;color:var(--chili);cursor:pointer;font-size:.7rem;text-decoration:underline;padding:0;}
+  .empty-ticket{text-align:center;color:#8a7c6a;font-size:.8rem;padding:1rem 0;}
+
+  .totals{font-size:.82rem;margin-top:.7rem;}
+  .totals .line{display:flex;justify-content:space-between;padding:.2rem 0;}
+  .totals .grand{font-weight:700;font-size:1rem;border-top:1px solid #a89a84;margin-top:.4rem;padding-top:.5rem;color:var(--chili);}
+  .tip-select{display:flex;gap:.5rem;margin:.6rem 0;font-size:.75rem;}
+  .tip-select label{display:flex;align-items:center;gap:.25rem;cursor:pointer;}
+
+  #placeOrderBtn{width:100%;margin-top:.8rem;background:var(--charcoal);color:var(--text-light);border:none;padding:.75rem;border-radius:999px;font-family:'Inter',sans-serif;font-weight:600;font-size:.88rem;cursor:pointer;letter-spacing:.02em;}
+  #placeOrderBtn:disabled{opacity:.4;cursor:not-allowed;}
+  #placeOrderBtn:not(:disabled):hover{background:var(--chili-dark);}
+
+  .ticket{position:relative;}
+  .stamp{position:absolute;top:38%;left:50%;transform:translate(-50%,-50%) rotate(-10deg) scale(.7);border:3px solid var(--basil);color:var(--basil);font-family:'Bebas Neue',sans-serif;font-size:1.3rem;padding:.3rem .8rem;letter-spacing:.08em;opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;background:rgba(247,236,217,.85);}
+  .ticket.stamped .stamp{opacity:1;transform:translate(-50%,-50%) rotate(-10deg) scale(1);}
+
+  footer{max-width:1180px;margin:0 auto 2rem;padding:0 1.5rem;color:var(--text-dim);font-size:.78rem;text-align:center;line-height:1.6;}
+  footer strong{color:var(--turmeric);}
+
+  #toast{position:fixed;left:50%;bottom:1.5rem;transform:translate(-50%,120%);background:var(--charcoal-soft);border:1px solid var(--turmeric);color:var(--text-light);padding:.75rem 1.25rem;border-radius:999px;font-size:.85rem;transition:transform .3s;z-index:50;max-width:90vw;text-align:center;}
+  #toast.show{transform:translate(-50%,0);}
+
+  button:focus-visible, input:focus-visible, select:focus-visible{outline:2px solid var(--turmeric);outline-offset:2px;}
+
+  @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important;}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="eyebrow">Ex.No 05 · DOM Elements &amp; Events · Theme: Online Food Delivery</div>
+  <h1 class="brand">CHILI <span>EXPRESS</span></h1>
+  <p class="tagline">hot food, cold delivery, zero drama</p>
+</header>
+
+<div class="controls">
+  <div class="search-wrap">
+    <input type="text" id="searchInput" placeholder="Search the menu… (e.g. paneer, pizza)" aria-label="Search menu">
+  </div>
+  <label class="veg-toggle"><input type="checkbox" id="vegToggle"> Veg only</label>
+  <select id="sortSelect" aria-label="Sort menu">
+    <option value="default">Sort: Featured</option>
+    <option value="price-asc">Price: Low to High</option>
+    <option value="price-desc">Price: High to Low</option>
+    <option value="name">Name: A–Z</option>
+  </select>
+</div>
+
+<div class="tabs" id="tabs">
+  <button class="tab active" data-category="all">All</button>
+  <button class="tab" data-category="starters">Starters</button>
+  <button class="tab" data-category="mains">Mains</button>
+  <button class="tab" data-category="beverages">Beverages</button>
+  <button class="tab" data-category="desserts">Desserts</button>
+</div>
+
+<p class="result-count" id="resultCount"></p>
+
+<div class="spin-card">
+  <div class="spin-inner">
+    <button id="spinBtn" type="button">🎡 Chef's Spin</button>
+    <div id="specialResult" aria-live="polite"></div>
+  </div>
+</div>
+
+<div class="layout">
+  <main>
+    <div id="menuGrid"></div>
+  </main>
+
+  <aside class="ticket" id="ticketPanel">
+    <div class="stamp">ORDER PLACED ✓</div>
+    <div class="ticket-inner">
+      <h2>Order Ticket</h2>
+      <div class="sub">CHILI EXPRESS · TOKEN #05</div>
+
+      <div class="ticket-body" id="ticketBody"></div>
+
+      <div class="tip-select">
+        <span>Tip:</span>
+        <label><input type="radio" name="tip" value="10"> 10%</label>
+        <label><input type="radio" name="tip" value="15" checked> 15%</label>
+        <label><input type="radio" name="tip" value="20"> 20%</label>
+      </div>
+
+      <div class="totals">
+        <div class="line"><span>Subtotal</span><span id="subtotal">₹0.00</span></div>
+        <div class="line"><span>Tax (5%)</span><span id="tax">₹0.00</span></div>
+        <div class="line"><span>Delivery</span><span id="delivery">—</span></div>
+        <div class="line"><span>Tip</span><span id="tipAmount">₹0.00</span></div>
+        <div class="line grand"><span>Total</span><span id="grandTotal">₹0.00</span></div>
+      </div>
+
+      <button id="placeOrderBtn" disabled>Place Order</button>
+    </div>
+  </aside>
+</div>
+
+<footer>
+  <div id="funFact"></div>
+  <div style="margin-top:.4rem;">Free delivery on orders over <strong>₹500</strong> · Built to demonstrate DOM selection &amp; event handling.</div>
+</footer>
+
+<div id="toast" role="status"></div>
+
+<script>
+/* =====================================================================
+   Ex.No 05 — JAVASCRIPT: DOM ELEMENTS AND EVENTS
+   Theme: Online Food Delivery ("Chili Express")
+
+   This file demonstrates, on one working page:
+   - Finding elements: getElementById, getElementsByTagName,
+     getElementsByClassName, querySelectorAll
+   - Events: onload, onclick, onchange, onkeyup, onmouseover/onmouseout
+   - Event delegation with addEventListener
+   - Math.random() for a "spin the wheel" feature
+   - String.split() / .length for a shortest/longest word check
+   ===================================================================== */
+
+/* ---------- 1. Data ---------- */
+const CATEGORY_ORDER = ['starters', 'mains', 'beverages', 'desserts'];
+const CATEGORY_LABEL = {
+  starters: 'Starters', mains: 'Mains',
+  beverages: 'Beverages', desserts: 'Desserts'
+};
+
+const menuData = [
+  { id: 1,  name: 'Paneer Tikka Skewers',   category: 'starters',  price: 180, veg: true,  icon: '🍢' },
+  { id: 2,  name: 'Chicken 65',             category: 'starters',  price: 220, veg: false, icon: '🍗' },
+  { id: 3,  name: 'Crispy Corn Chaat',      category: 'starters',  price: 150, veg: true,  icon: '🌽' },
+  { id: 4,  name: 'Spring Rolls',           category: 'starters',  price: 160, veg: true,  icon: '🥟' },
+  { id: 5,  name: 'Butter Chicken Bowl',    category: 'mains',     price: 280, veg: false, icon: '🍛' },
+  { id: 6,  name: 'Paneer Butter Masala',   category: 'mains',     price: 260, veg: true,  icon: '🍛' },
+  { id: 7,  name: 'Veg Biryani',            category: 'mains',     price: 240, veg: true,  icon: '🍚' },
+  { id: 8,  name: 'Chicken Biryani',        category: 'mains',     price: 300, veg: false, icon: '🍚' },
+  { id: 9,  name: 'Margherita Pizza',       category: 'mains',     price: 320, veg: true,  icon: '🍕' },
+  { id: 10, name: 'Classic Cheeseburger',   category: 'mains',     price: 250, veg: false, icon: '🍔' },
+  { id: 11, name: 'Mango Lassi',            category: 'beverages', price: 90,  veg: true,  icon: '🥤' },
+  { id: 12, name: 'Masala Chai',            category: 'beverages', price: 40,  veg: true,  icon: '☕' },
+  { id: 13, name: 'Cold Coffee',            category: 'beverages', price: 110, veg: true,  icon: '🧊' },
+  { id: 14, name: 'Fresh Lime Soda',        category: 'beverages', price: 70,  veg: true,  icon: '🍋' },
+  { id: 15, name: 'Gulab Jamun',            category: 'desserts',  price: 80,  veg: true,  icon: '🍡' },
+  { id: 16, name: 'Chocolate Brownie',      category: 'desserts',  price: 120, veg: true,  icon: '🍫' },
+  { id: 17, name: 'Rasmalai',               category: 'desserts',  price: 100, veg: true,  icon: '🍮' }
+];
+
+let cart = {};              // { itemId: quantity }
+const state = { category: 'all', search: '', vegOnly: false, sort: 'default' };
+
+/* ---------- 2. Cache DOM references (getElementById) ---------- */
+const el = {};
+function cacheDom() {
+  ['searchInput','vegToggle','sortSelect','tabs','resultCount','menuGrid',
+   'spinBtn','specialResult','ticketPanel','ticketBody','subtotal','tax',
+   'delivery','tipAmount','grandTotal','placeOrderBtn','toast','funFact']
+    .forEach(id => { el[id] = document.getElementById(id); });
+}
+
+const fmt = n => '₹' + n.toFixed(2);
+
+/* ---------- 3. Render the menu ---------- */
+function cardTemplate(item) {
+  return `
+    <div class="menu-card" data-id="${item.id}">
+      <span class="hover-hint">tap +</span>
+      <div class="icon">${item.icon}</div>
+      <div class="name-row">
+        <span class="diet-mark ${item.veg ? 'veg' : 'nonveg'}"></span>
+        <span class="name">${item.name}</span>
+      </div>
+      <span class="price">${fmt(item.price)}</span>
+      <button class="add-btn" data-id="${item.id}" type="button">Add to cart</button>
+    </div>`;
+}
+
+function renderMenu() {
+  let items = menuData.slice();
+
+  if (state.vegOnly) items = items.filter(i => i.veg);
+  if (state.search) {
+    const q = state.search.toLowerCase();
+    items = items.filter(i => i.name.toLowerCase().includes(q));
+  }
+  if (state.category !== 'all') items = items.filter(i => i.category === state.category);
+
+  if (state.sort === 'price-asc')  items.sort((a, b) => a.price - b.price);
+  if (state.sort === 'price-desc') items.sort((a, b) => b.price - a.price);
+  if (state.sort === 'name')       items.sort((a, b) => a.name.localeCompare(b.name));
+
+  if (!items.length) {
+    el.menuGrid.innerHTML = `<p class="empty-state">No dishes match your filters. Try clearing the search or the veg-only toggle.</p>`;
+  } else if (state.category === 'all') {
+    // Group by category so browsing "All" still reads as a menu, not a pile
+    el.menuGrid.innerHTML = CATEGORY_ORDER
+      .map(cat => {
+        const group = items.filter(i => i.category === cat);
+        if (!group.length) return '';
+        return `<h3 class="cat-heading">${CATEGORY_LABEL[cat]}</h3><div class="cards">${group.map(cardTemplate).join('')}</div>`;
+      })
+      .join('');
+  } else {
+    el.menuGrid.innerHTML = `<div class="cards">${items.map(cardTemplate).join('')}</div>`;
+  }
+
+  updateResultCount();
+}
+
+// getElementsByClassName + getElementsByTagName demo: live counts after each render
+function updateResultCount() {
+  const cardCount = document.getElementsByClassName('menu-card').length;   // getElementsByClassName
+  const headingCount = document.getElementsByTagName('h3').length;         // getElementsByTagName
+  el.resultCount.textContent = state.category === 'all'
+    ? `${cardCount} dish${cardCount === 1 ? '' : 'es'} across ${headingCount} categories`
+    : `${cardCount} dish${cardCount === 1 ? '' : 'es'} in ${CATEGORY_LABEL[state.category]}`;
+}
+
+/* ---------- 4. Cart / ticket ---------- */
+function addToCart(id) {
+  cart[id] = (cart[id] || 0) + 1;
+  renderTicket();
+}
+
+function ticketLineTemplate(item, qty) {
+  return `
+    <div class="ticket-line">
+      <div class="row">
+        <span>${item.icon} ${item.name}</span>
+        <span class="leader"></span>
+        <span>${fmt(item.price * qty)}</span>
+      </div>
+      <div class="qty-controls">
+        <button data-action="dec" data-id="${item.id}" type="button" aria-label="Decrease quantity">−</button>
+        <span>${qty}</span>
+        <button data-action="inc" data-id="${item.id}" type="button" aria-label="Increase quantity">+</button>
+        <button class="remove-btn" data-action="remove" data-id="${item.id}" type="button">remove</button>
+      </div>
+    </div>`;
+}
+
+function renderTicket() {
+  const entries = Object.entries(cart).filter(([, qty]) => qty > 0);
+
+  el.ticketBody.innerHTML = entries.length
+    ? entries.map(([id, qty]) => ticketLineTemplate(menuData.find(m => m.id === Number(id)), qty)).join('')
+    : `<p class="empty-ticket">Your ticket is empty. Add a dish to get started.</p>`;
+
+  const subtotal = entries.reduce((sum, [id, qty]) => sum + menuData.find(m => m.id === Number(id)).price * qty, 0);
+  const tax = subtotal * 0.05;
+  const delivery = subtotal === 0 ? 0 : (subtotal >= 500 ? 0 : 30);
+  const tipInput = document.querySelector('input[name="tip"]:checked');   // querySelector demo
+  const tipPercent = tipInput ? Number(tipInput.value) : 0;
+  const tipAmount = (subtotal + tax) * tipPercent / 100;
+  const total = subtotal + tax + delivery + tipAmount;
+
+  el.subtotal.textContent = fmt(subtotal);
+  el.tax.textContent = fmt(tax);
+  el.delivery.textContent = subtotal === 0 ? '—' : (delivery === 0 ? 'FREE' : fmt(delivery));
+  el.tipAmount.textContent = fmt(tipAmount);
+  el.grandTotal.textContent = fmt(total);
+  el.placeOrderBtn.disabled = entries.length === 0;
+}
+
+/* ---------- 5. Chef's Spin (Math.random demo) ---------- */
+function spinChefSpecial() {
+  const pick = menuData[Math.floor(Math.random() * menuData.length)];
+  el.specialResult.innerHTML = `🎉 Chef's Pick: <strong>${pick.icon} ${pick.name}</strong> — 20% off if you add it right now!`;
+}
+
+/* ---------- 6. Shortest / longest word (Sample Q1 logic, applied to our tagline) ---------- */
+function findShortestLongestWord(sentence) {
+  const words = sentence.split(' ');            // split() -> array
+  let shortest = words[0], longest = words[0];
+  for (const w of words) {
+    if (w.length < shortest.length) shortest = w;  // .length on a string
+    if (w.length > longest.length) longest = w;
+  }
+  return { shortest, longest };                    // words.length -> array size, used implicitly by loop
+}
+
+function showFunFact() {
+  const { shortest, longest } = findShortestLongestWord('hot food cold delivery zero drama fast and fresh');
+  el.funFact.innerHTML = `Fun fact from our tagline — Shortest word: <strong>"${shortest}"</strong> · Longest word: <strong>"${longest}"</strong>`;
+}
+
+/* ---------- 7. Toast + feedback helpers ---------- */
+let toastTimer;
+function showToast(message, duration) {
+  el.toast.textContent = message;
+  el.toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.toast.classList.remove('show'), duration);
+}
+
+function pulse(btn) {
+  btn.classList.add('pulse');
+  setTimeout(() => btn.classList.remove('pulse'), 350);
+}
+
+/* ---------- 8. Wire up events ---------- */
+function bindEvents() {
+  // onkeyup — live search as the user types
+  el.searchInput.addEventListener('keyup', e => {
+    state.search = e.target.value;
+    renderMenu();
+  });
+
+  // onchange — veg-only toggle
+  el.vegToggle.addEventListener('change', e => {
+    state.vegOnly = e.target.checked;
+    renderMenu();
+  });
+
+  // onchange — sort dropdown
+  el.sortSelect.addEventListener('change', e => {
+    state.sort = e.target.value;
+    renderMenu();
+  });
+
+  // onclick (delegated) — category tabs
+  el.tabs.addEventListener('click', e => {
+    const btn = e.target.closest('.tab');
+    if (!btn) return;
+    Array.from(document.getElementsByClassName('tab active')).forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    state.category = btn.dataset.category;
+    renderMenu();
+  });
+
+  // onclick (delegated) + onmouseover/onmouseout — menu cards
+  el.menuGrid.addEventListener('click', e => {
+    const btn = e.target.closest('.add-btn');
+    if (!btn) return;
+    addToCart(Number(btn.dataset.id));
+    pulse(btn);
+  });
+  el.menuGrid.addEventListener('mouseover', e => {
+    const card = e.target.closest('.menu-card');
+    if (card) card.classList.add('is-hovered');
+  });
+  el.menuGrid.addEventListener('mouseout', e => {
+    const card = e.target.closest('.menu-card');
+    if (card) card.classList.remove('is-hovered');
+  });
+
+  // onclick (delegated) — ticket quantity controls
+  el.ticketBody.addEventListener('click', e => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const id = Number(btn.dataset.id);
+    if (btn.dataset.action === 'inc') cart[id]++;
+    if (btn.dataset.action === 'dec') { cart[id]--; if (cart[id] <= 0) delete cart[id]; }
+    if (btn.dataset.action === 'remove') delete cart[id];
+    renderTicket();
+  });
+
+  // onchange — tip radios (use querySelectorAll to attach all three at once)
+  document.querySelectorAll('input[name="tip"]').forEach(radio => {
+    radio.addEventListener('change', renderTicket);
+  });
+
+  // onclick — chef's spin
+  el.spinBtn.addEventListener('click', spinChefSpecial);
+
+  // onclick — place order
+  el.placeOrderBtn.addEventListener('click', () => {
+    if (Object.keys(cart).length === 0) return;
+    el.ticketPanel.classList.add('stamped');
+    showToast('Order placed! Your food is on its way 🛵💨', 3500);
+    setTimeout(() => {
+      cart = {};
+      renderTicket();
+      el.ticketPanel.classList.remove('stamped');
+    }, 3200);
+  });
+}
+
+/* ---------- 9. onload — everything starts once the page has loaded ---------- */
+window.addEventListener('load', () => {
+  cacheDom();
+  renderMenu();
+  renderTicket();
+  showFunFact();
+  bindEvents();
+  showToast('Welcome to Chili Express! Craving something? 🌶️', 3200);
+});
+</script>
+</body>
+</html>
